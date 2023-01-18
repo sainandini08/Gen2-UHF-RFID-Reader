@@ -38,8 +38,8 @@ namespace gr {
 
       std::vector<int> output_sizes;
       output_sizes.push_back(sizeof(float));
-      output_sizes.push_back(sizeof(char));
-      //output_sizes.push_back(sizeof(gr_complex));
+      //output_sizes.push_back(sizeof(char));
+      output_sizes.push_back(sizeof(gr_complex));
 
       return gnuradio::get_initial_sptr
         (new tag_decoder_impl(sample_rate,output_sizes));
@@ -204,9 +204,9 @@ namespace gr {
 
       const gr_complex *in = (const  gr_complex *) input_items[0];
       float *out = (float *) output_items[0];
-      //gr_complex *out_2 = (gr_complex *) output_items[1]; // for debugging
+      gr_complex *out_2 = (gr_complex *) output_items[1]; // for debugging
       //float *out_2 = (float *) output_items[1];
-      char *out_2 = (char *) output_items[1];
+      //char *out_2 = (char *) output_items[1];
 
       int written_sync =0;
       int written = 0, consumed = 0;
@@ -367,14 +367,14 @@ namespace gr {
           EPC_samples_complex.push_back(in[j]);
         }
 
-        /*
+        
         for (int j = 0; j < ninput_items[0] ; j ++ )
         {
           out_2[written_sync] = in[j];
            written_sync ++;
         }
         produce(1,written_sync);
-        */
+        
 
         EPC_bits   = tag_detection_EPC(EPC_samples_complex,EPC_index);
 
@@ -388,10 +388,10 @@ namespace gr {
               char_bits[i] = '0';
             else
               char_bits[i] = '1';
-              //out_2[written_sync] = char_bits[i];
-              //written_sync ++;
+              out_2[written_sync] = char_bits[i];
+              written_sync ++;
           }
-          //produce(1,written_sync);
+          produce(1,written_sync);
 
           if(check_crc(char_bits,128) == 1)
           {
