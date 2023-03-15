@@ -63,16 +63,19 @@ class MainWindow(QWidget):
         self.label.move(x, y)
 
     def update_label_zmq(self, data):
+        ## called by zmq connect signal
         if data and data == b'\x01':
             self.last_updated = QDateTime.currentDateTime()
             self.label.setText("Tag present")
         elif data:
             print(data)
 
-
     def update_label(self):
+        ## called by timer to frequently update the label
         elapsed_time = self.last_updated.msecsTo(QDateTime.currentDateTime())
 
+        ## if there is no new "1" received from zmq sub in 500ms
+        ## no tag is present
         if elapsed_time > 500:
             self.label.setText("No tag present")
 

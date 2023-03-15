@@ -12,7 +12,9 @@ socket.setsockopt(zmq.SUBSCRIBE, b'')  # subscribe to topic of all
 running = True
 
 while running:
-	Present = socket.recv()
-	print(Present)
-	a = int.from_bytes(Present, "little")
-	print(a)
+	Tag = socket.recv()
+	#print(Tag)
+	if Tag and Tag == b'\x01':
+		print("tag present")
+	#Tag_int = int.from_bytes(Tag, "little")
+	#print(Tag_int)
