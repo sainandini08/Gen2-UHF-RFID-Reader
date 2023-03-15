@@ -11,13 +11,10 @@ if len(sys.argv) > 1:
 
 context = zmq.Context()
 socket = context.socket(zmq.PUB)
-# socket.bind("tcp://127.0.0.2:%s" % port)
-# Bind is for local endpoint, * or localhost. Not specific IP?
 socket.bind("tcp://*:%s" % port)
-# socket.bind("tcp://192.168.1.103:%s" % port)
 
 while True:
-	EPC = random.choice(['1', '0'])
-	socket.send(bytes(EPC, 'utf-8'))
+	TAG_PRESENT = random.choice([1, 0])
+	socket.send(bytes([TAG_PRESENT]))
 	print('Sent')
-	time.sleep(0.3)
+	time.sleep(0.1)
