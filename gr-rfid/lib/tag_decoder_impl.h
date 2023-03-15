@@ -47,7 +47,7 @@ namespace rfid {
        int check_crc(char * bits, int num_bits);
 
     public:
-      tag_decoder_impl(int sample_rate, std::vector<int> output_sizes);
+      tag_decoder_impl(int sample_rate);
       ~tag_decoder_impl();
 
       void forecast (int noutput_items, gr_vector_int &ninput_items_required);

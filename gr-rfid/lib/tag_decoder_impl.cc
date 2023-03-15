@@ -36,22 +36,22 @@ namespace gr {
     tag_decoder::make(int sample_rate)
     {
 
-      std::vector<int> output_sizes;
-      output_sizes.push_back(sizeof(float));
-      //output_sizes.push_back(sizeof(char));
-      output_sizes.push_back(sizeof(gr_complex));
+      // std::vector<int> output_sizes;
+      // output_sizes.push_back(sizeof(float));
+      // //output_sizes.push_back(sizeof(char));
+      // output_sizes.push_back(sizeof(float));
 
       return gnuradio::get_initial_sptr
-        (new tag_decoder_impl(sample_rate,output_sizes));
+        (new tag_decoder_impl(sample_rate));
     }
 
     /*
      * The private constructor
      */
-    tag_decoder_impl::tag_decoder_impl(int sample_rate, std::vector<int> output_sizes)
+    tag_decoder_impl::tag_decoder_impl(int sample_rate)
       : gr::block("tag_decoder",
               gr::io_signature::make(1, 1, sizeof(gr_complex)),
-              gr::io_signature::makev(2, 2, output_sizes )),
+              gr::io_signature::make(1, 1, sizeof(float) )),
               s_rate(sample_rate)
     {
 
@@ -85,7 +85,6 @@ namespace gr {
         for (int j = i; j < i + 10; j ++){
           sum += std::abs(in[j]);
         }
-        std::cout << sum << std::endl;
 
         if(sum > max){
           max = sum;
@@ -236,8 +235,8 @@ namespace gr {
 
       const gr_complex *in = (const  gr_complex *) input_items[0];
       float *out = (float *) output_items[0];
-      gr_complex *out_2 = (gr_complex *) output_items[1]; // for debugging
-      //float *out_2 = (float *) output_items[1];
+      //char *out_2 = (char *) output_items[1]; // for debugging
+      // float *out_2 = (float *) output_items[1];
       //char *out_2 = (char *) output_items[1];
 
       int written_sync =0;
@@ -255,81 +254,20 @@ namespace gr {
 
       std::vector<float> EPC_bits;
 
-      // Old RN16 decoding method
-      // if (reader_state->decoder_status == DECODER_DECODE_RN16 && ninput_items[0] >= reader_state->n_samples_to_ungate)
-      // {
-      //   RN16_index = tag_sync(in,ninput_items[0]);
-      //   //std::cout<<in<<std::endl;
-      //   //std::cout<<n_samples_to_ungate<<std::endl;
-      //   //std::cout<<ninput_items[0]<<std::endl;
+      int RN16_preamble_bits = 4; // 1010
+      int RN16_preamble [] = {1,0,1,0};
 
-
-      //   /*
-      //   for (int j = 0; j < ninput_items[0]; j ++ )
-      //   {
-      //     out_2[written_sync] = in[j];
-      //      written_sync ++;
-      //   }
-      //   produce(1,written_sync);
-      //   */
-
-
-
-      //   for (float j = RN16_index; j < ninput_items[0]; j += n_samples_TAG_BIT/2 )
-      //   {
-      //     number_of_half_bits++;
-      //     int k = round(j);
-      //     RN16_samples_complex.push_back(in[k]);
-
-
-      //     //out_2[written_sync] = in[j];
-      //      //written_sync ++;
-
-      //     /* txy
-      //     out_2[written_sync] = 'a';
-      //     written_sync ++;*/
-
-      //     //std::cout<<written_sync<<std::endl;
-
-
-      //     if (number_of_half_bits == 2*(RN16_BITS-1))
-      //     {
-      //       //out_2[written_sync] = h_est;
-      //        //written_sync ++;
-      //       // produce(1,written_sync);
-      //       break;
-      //     }
-      //   }
-
-      //   // RN16 bits are passed to the next block for the creation of ACK message
-      //   if (number_of_half_bits == 2*(RN16_BITS-1))
-      //   {
-      //     GR_LOG_INFO(d_debug_logger, "RN16 DECODED");
-      //     RN16_bits  = tag_detection_RN16(RN16_samples_complex);
-
-      //     for(int bit=0; bit<RN16_bits.size(); bit++)
-      //     {
-      //       out[written] =  RN16_bits[bit];
-      //       written ++;
-      //       //out_2[written_sync] = RN16_bits[bit];
-      //       //written_sync ++;
-      //     }
-      //     produce(0,written);
-      //     //produce(1,written_sync);
-      //     reader_state->gen2_logic_status = SEND_ACK;
-      //   }
-      // Processing only after n_samples_to_ungate are available and we need to decode an RN16
-      // GR_LOG_INFO(d_logger, ninput_items[0])
       if (reader_state->decoder_status == DECODER_DECODE_RN16 && ninput_items[0] >= reader_state->n_samples_to_ungate)
       {
         //RN16_index = tag_sync(in,ninput_items[0]);
-        RN16_index = 60;
+        RN16_index = 0;
+        
 
         // RN16 bits are passed to the next block for the creation of ACK message
         if ((RN16_index >= 0) && (RN16_index + (n_samples_TAG_BIT)*(RN16_BITS-1) <= ninput_items[0]))
         {
-
-          std::cout << "RN16 : ";
+          int recv_rn16[4];
+          std::cout << "Preamble : ";
           int offset = find_offset(in);
           //GR_LOG_INFO(d_logger, "Max offset is: " + std::to_string(offset));
 
@@ -348,36 +286,42 @@ namespace gr {
             }
             first_half = first_half / 4;
             
-            //GR_LOG_INFO(d_logger, "first half: " + std::to_string(first_half)); 
-            
             k = round(j + n_samples_TAG_BIT/2);
             float sec_half = 0;
             for (int l = 1; l < n_samples_TAG_BIT/2; l ++){
               sec_half += std::abs(in[k+l]) - average_ampl;
             }
             sec_half = sec_half / 4;
-            //GR_LOG_INFO(d_logger, "sec half: " + std::to_string(sec_half));
-            //GR_LOG_INFO(d_logger, "diff: " + std::to_string(first_half - sec_half));
 
-            //if (((first_half - sec_half) < -0.05 ) || ((first_half - sec_half) >0.05)){
+            int curr_reading = -1;
             if (((first_half * sec_half) < 0 )){
-              out[written] = 0;  
+              //out[written] = 0;  
               std::cout << "0"; 
+              recv_rn16[written] = 0;
             }
             else
             { 
-              out[written] = 1; 
+              //out[written] = 1; 
               std::cout << "1"; 
+              recv_rn16[written] = 1;
             }
             written ++;
-            if (number_of_half_bits == 2*(RN16_BITS-1))
+            if (number_of_half_bits == 2*RN16_preamble_bits)
             {            
               std::cout << std::endl;
               break;
             }
           }
-          produce(0,written);
-          reader_state->gen2_logic_status = SEND_ACK;
+          if (std::equal(std::begin(recv_rn16), std::end(recv_rn16), std::begin(RN16_preamble)))
+          {
+            GR_LOG_INFO(d_logger, "Tag");
+            out[0] = 1;
+          }
+          // else{
+          //   out[0] = 0;
+          // }
+          produce(0,1);
+          reader_state->gen2_logic_status = IDLE;
         }      
         else
         {
@@ -398,132 +342,6 @@ namespace gr {
           {
             reader_state->gen2_logic_status = SEND_QUERY_REP;
           }
-        }
-        consumed = reader_state->n_samples_to_ungate;
-      }
-      else if (reader_state->decoder_status == DECODER_DECODE_EPC && ninput_items[0] >= reader_state->n_samples_to_ungate )
-      {
-
-        //After EPC message send a query rep or query
-        reader_state->reader_stats.cur_slot_number++;
-
-
-        EPC_index = tag_sync(in,ninput_items[0]) + int(n_samples_TAG_BIT/2); 
-
-        for (int j = 0; j < ninput_items[0]; j++ )
-        {
-          EPC_samples_complex.push_back(in[j]);
-        }
-
-        
-        for (int j = 0; j < ninput_items[0] ; j ++ )
-        {
-          out_2[written_sync] = in[j];
-           written_sync ++;
-        }
-        produce(1,written_sync);
-        
-
-        EPC_bits   = tag_detection_EPC(EPC_samples_complex,EPC_index);
-
-
-        if (EPC_bits.size() == EPC_BITS - 1)
-        {
-          // float to char -> use Buettner's function
-          for (int i =0; i < 128; i ++)
-          {
-            if (EPC_bits[i] == 0)
-              char_bits[i] = '0';
-            else
-              char_bits[i] = '1';
-              out_2[written_sync] = char_bits[i];
-              written_sync ++;
-          }
-          produce(1,written_sync);
-
-          if(check_crc(char_bits,128) == 1)
-          {
-            for (int i =0; i < 128; i ++)
-            {
-              out_2[written_sync] = char_bits[i];
-              written_sync ++;
-            }
-            produce(1,written_sync);
-
-            if(reader_state->reader_stats.cur_slot_number > reader_state->reader_stats.max_slot_number)
-            {
-              reader_state->reader_stats.cur_slot_number = 1;
-              reader_state->reader_stats.unique_tags_round.push_back(reader_state->reader_stats.tag_reads.size());
-
-              reader_state->reader_stats.cur_inventory_round+=1;
-              //if (P_DOWN == true)
-              //  reader_state->gen2_logic_status = POWER_DOWN;
-              //else
-                reader_state->gen2_logic_status = SEND_QUERY;
-            }
-            else
-            {
-              reader_state->gen2_logic_status = SEND_QUERY_REP;
-            }
-
-            reader_state->reader_stats.n_epc_correct+=1;
-
-            int result = 0;
-            for(int i = 0 ; i < 8 ; ++i)
-            {
-              result += std::pow(2,7-i) * EPC_bits[104+i] ;
-            }
-            std::cout << "EPC : ";
-            for (int i =0; i < 128; i ++)
-            {
-              if (EPC_bits[i] == 0)
-                std::cout << "0"; 
-              else
-                std::cout << "1"; 
-            }
-            std::cout << std::endl;
-
-            // GR_LOG_INFO(d_logger, "EPC CORRECTLY DECODED, TAG ID : " + std::to_string(result));
-            std::cout << "EPC CORRECTLY DECODED" << std::endl;
-            std::cout << "EPC id : " << std::hex << result << std::endl;
-
-            // Save part of Tag's EPC message (EPC[104:111] in decimal) + number of reads
-            std::map<int,int>::iterator it = reader_state->reader_stats.tag_reads.find(result);
-            if ( it != reader_state->reader_stats.tag_reads.end())
-            {
-              it->second ++;
-            }
-            else
-            {
-              reader_state->reader_stats.tag_reads[result]=1;
-            }
-      }
-          else
-          {
-
-            if(reader_state->reader_stats.cur_slot_number > reader_state->reader_stats.max_slot_number)
-            {
-              reader_state->reader_stats.cur_slot_number = 1;
-              reader_state->reader_stats.cur_inventory_round+=1;
-              //if (P_DOWN == true)
-              //  reader_state->gen2_logic_status = POWER_DOWN;
-              //else
-              //  reader_state->gen2_logic_status = SEND_NAK_Q;
-                reader_state->gen2_logic_status = SEND_QUERY;
-            }
-            else
-            {
-                //reader_state->gen2_logic_status = SEND_NAK_QR;
-                reader_state->gen2_logic_status = SEND_QUERY_REP;
-            }
-
-
-            GR_LOG_INFO(d_logger, "EPC FAIL TO DECODE");
-          }
-        }
-        else
-        {
-          GR_LOG_EMERG(d_debug_logger, "CHECK ME");
         }
         consumed = reader_state->n_samples_to_ungate;
       }

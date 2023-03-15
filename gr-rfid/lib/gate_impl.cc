@@ -169,9 +169,9 @@ namespace gr {
 
             if(n_samples > n_samples_T1 && signal_state == POS_EDGE && num_pulses > NUM_PULSES_COMMAND)
             {
-              GR_LOG_INFO(d_logger, "avg ampl is: " + std::to_string(avg_ampl));
-              GR_LOG_INFO(d_logger, "READER COMMAND DETECTED");
-              GR_LOG_INFO(d_logger, dc_est);
+              //GR_LOG_INFO(d_logger, "avg ampl is: " + std::to_string(avg_ampl));
+              //GR_LOG_INFO(d_logger, "READER COMMAND DETECTED");
+              //GR_LOG_INFO(d_logger, dc_est);
 
               reader_state->gate_status = GATE_OPEN;
 

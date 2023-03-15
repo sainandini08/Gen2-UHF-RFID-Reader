@@ -16,7 +16,4 @@ outputs:
 - label: out
   domain: stream
   dtype: float
-- label: out
-  domain: stream
-  dtype: complex 
 file_format: 1

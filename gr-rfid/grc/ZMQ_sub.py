@@ -14,8 +14,8 @@ socket.setsockopt(zmq.SUBSCRIBE, b'')  # subscribe to topic of all
 running = True
 
 while running:
-	EPC, RSSI = socket.recv_multipart()
-	print(EPC, RSSI)
-	EPC = EPC.decode('utf-8')
-	RSSI = float(RSSI.decode('utf-8'))
-	print(EPC, RSSI)
+	Present = socket.recv()
+	print(type(Present))
+	print(Present)
+	a = int.from_bytes(Present, "little")
+	print(a)
