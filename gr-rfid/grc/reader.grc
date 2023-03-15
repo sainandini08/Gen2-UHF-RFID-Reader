@@ -168,7 +168,7 @@ blocks:
   id: variable
   parameters:
     comment: ''
-    value: '"tcp://127.0.0.2:5556"'
+    value: '"tcp://127.0.0.1:5556"'
   states:
     bus_sink: false
     bus_source: false

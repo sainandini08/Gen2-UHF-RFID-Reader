@@ -72,7 +72,7 @@ class reader(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.zmq_addr = zmq_addr = "tcp://127.0.0.2:5556"
+        self.zmq_addr = zmq_addr = "tcp://127.0.0.1:5556"
         self.tx_gain = tx_gain = 70
         self.tx_bw = tx_bw = 1e6
         self.rx_gain = rx_gain = 10
