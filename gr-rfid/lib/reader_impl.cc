@@ -255,7 +255,7 @@ namespace gr {
           {
             std::cout << "Running " << std::endl;
           }*/
-
+          reset_counter = 0;
           GR_LOG_INFO(d_debug_logger, "QUERY");
           GR_LOG_INFO(d_debug_logger, "INVENTORY ROUND : " + std::to_string(reader_state->reader_stats.cur_inventory_round) + " SLOT NUMBER : " + std::to_string(reader_state->reader_stats.cur_slot_number));
 
@@ -373,8 +373,8 @@ namespace gr {
           break;
 
         default:
-          //reset_counter++;
-          //if(reset_counter > 100000) reader_state->gen2_logic_status=SEND_QUERY;
+          reset_counter++;
+          if(reset_counter > 500000) reader_state->gen2_logic_status=START;
           // IDLE
           break;
 	  }
