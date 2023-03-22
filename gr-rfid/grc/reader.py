@@ -73,10 +73,10 @@ class reader(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.zmq_addr = zmq_addr = "tcp://172.20.10.13:5555"
+        self.zmq_addr = zmq_addr = "tcp://127.0.0.1:5555"
         self.tx_gain = tx_gain = 70
         self.tx_bw = tx_bw = 1e6
-        self.rx_gain = rx_gain = 20
+        self.rx_gain = rx_gain = 40
         self.rx_bw = rx_bw = 1e6
         self.path_to_data = path_to_data = "/home/sakeru/Desktop/fyp/Gen2-UHF-RFID-Reader/gr-rfid/misc/data/"
         self.num_taps = num_taps = [1] * 25
@@ -128,23 +128,14 @@ class reader(gr.top_block, Qt.QWidget):
                 fractional_bw=0.4)
         self.blocks_float_to_uchar_0 = blocks.float_to_uchar()
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
-        self.blocks_file_sink_6 = blocks.file_sink(gr.sizeof_gr_complex*1, path_to_data+"to_complex", False)
-        self.blocks_file_sink_6.set_unbuffered(False)
-        self.blocks_file_sink_3 = blocks.file_sink(gr.sizeof_gr_complex*1, path_to_data+"gate", False)
-        self.blocks_file_sink_3.set_unbuffered(False)
-        self.blocks_file_sink_2 = blocks.file_sink(gr.sizeof_gr_complex*1, path_to_data+"matched_filter", False)
-        self.blocks_file_sink_2.set_unbuffered(False)
 
 
         ##################################################
         # Connections
         ##################################################
-        self.connect((self.blocks_float_to_complex_0, 0), (self.blocks_file_sink_6, 0))
         self.connect((self.blocks_float_to_complex_0, 0), (self.uhd_usrp_sink_2, 0))
         self.connect((self.blocks_float_to_uchar_0, 0), (self.zeromq_pub_sink_0, 0))
-        self.connect((self.rational_resampler_xxx_0, 0), (self.blocks_file_sink_2, 0))
         self.connect((self.rational_resampler_xxx_0, 0), (self.rfid_gate_0, 0))
-        self.connect((self.rfid_gate_0, 0), (self.blocks_file_sink_3, 0))
         self.connect((self.rfid_gate_0, 0), (self.rfid_tag_decoder_0, 0))
         self.connect((self.rfid_reader_0, 0), (self.blocks_float_to_complex_0, 0))
         self.connect((self.rfid_tag_decoder_0, 0), (self.blocks_float_to_uchar_0, 0))
@@ -195,9 +186,6 @@ class reader(gr.top_block, Qt.QWidget):
 
     def set_path_to_data(self, path_to_data):
         self.path_to_data = path_to_data
-        self.blocks_file_sink_2.open(self.path_to_data+"matched_filter")
-        self.blocks_file_sink_3.open(self.path_to_data+"gate")
-        self.blocks_file_sink_6.open(self.path_to_data+"to_complex")
 
     def get_num_taps(self):
         return self.num_taps

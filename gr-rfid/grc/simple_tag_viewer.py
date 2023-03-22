@@ -12,7 +12,7 @@ class ZMQThread(QThread):
         super().__init__()
         self.context = zmq.Context()
         self.socket = self.context.socket(zmq.SUB)
-        self.socket.connect("tcp://localhost:5556")
+        self.socket.connect("tcp://localhost:5555")
         self.socket.subscribe(b"")
 
     def run(self):
@@ -25,13 +25,13 @@ class MainWindow(QWidget):
     def __init__(self):
         super().__init__()
 
-        self.setGeometry(0, 0, 200, 100)
+        self.setGeometry(0, 0, 1200, 1000)
         self.setWindowTitle("ZMQ Socket Reader")
 
         self.label = QLabel(self)
-        self.label.setGeometry(0, 0, 200, 50)
+        self.label.setGeometry(0, 0, 1200, 1000)
         self.label.setAlignment(Qt.AlignCenter)
-        self.label.setStyleSheet("font-size: 20px;")
+        self.label.setStyleSheet("font-size: 180px;")
         self.label.setText("No tag present")
 
         self.zmq_thread = ZMQThread()
@@ -76,8 +76,8 @@ class MainWindow(QWidget):
 
         ## if there is no new "1" received from zmq sub in 500ms
         ## no tag is present
-        if elapsed_time > 500:
-            self.label.setText("No tag present")
+        if elapsed_time > 300:
+            self.label.setText("No tag")
 
 
     def closeEvent(self, event):
