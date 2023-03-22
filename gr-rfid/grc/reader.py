@@ -73,10 +73,10 @@ class reader(gr.top_block, Qt.QWidget):
         ##################################################
         # Variables
         ##################################################
-        self.zmq_addr = zmq_addr = "tcp://127.0.0.1:5555"
+        self.zmq_addr = zmq_addr = "tcp://*:5555"
         self.tx_gain = tx_gain = 70
         self.tx_bw = tx_bw = 1e6
-        self.rx_gain = rx_gain = 40
+        self.rx_gain = rx_gain = 20
         self.rx_bw = rx_bw = 1e6
         self.path_to_data = path_to_data = "/home/sakeru/Desktop/fyp/Gen2-UHF-RFID-Reader/gr-rfid/misc/data/"
         self.num_taps = num_taps = [1] * 25
