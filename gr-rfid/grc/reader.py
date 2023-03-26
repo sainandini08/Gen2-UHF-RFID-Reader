@@ -8,25 +8,12 @@
 # Title: EE4002D
 # GNU Radio version: v3.8.5.0-6-g57bd109d
 
-from distutils.version import StrictVersion
-
-if __name__ == '__main__':
-    import ctypes
-    import sys
-    if sys.platform.startswith('linux'):
-        try:
-            x11 = ctypes.cdll.LoadLibrary('libX11.so')
-            x11.XInitThreads()
-        except:
-            print("Warning: failed to XInitThreads()")
-
 from gnuradio import blocks
 from gnuradio import filter
 from gnuradio.filter import firdes
 from gnuradio import gr
 import sys
 import signal
-from PyQt5 import Qt
 from argparse import ArgumentParser
 from gnuradio.eng_arg import eng_float, intx
 from gnuradio import eng_notation
@@ -35,55 +22,26 @@ import time
 from gnuradio import zeromq
 import rfid
 
-from gnuradio import qtgui
 
-class reader(gr.top_block, Qt.QWidget):
+class reader(gr.top_block):
 
     def __init__(self):
         gr.top_block.__init__(self, "EE4002D")
-        Qt.QWidget.__init__(self)
-        self.setWindowTitle("EE4002D")
-        qtgui.util.check_set_qss()
-        try:
-            self.setWindowIcon(Qt.QIcon.fromTheme('gnuradio-grc'))
-        except:
-            pass
-        self.top_scroll_layout = Qt.QVBoxLayout()
-        self.setLayout(self.top_scroll_layout)
-        self.top_scroll = Qt.QScrollArea()
-        self.top_scroll.setFrameStyle(Qt.QFrame.NoFrame)
-        self.top_scroll_layout.addWidget(self.top_scroll)
-        self.top_scroll.setWidgetResizable(True)
-        self.top_widget = Qt.QWidget()
-        self.top_scroll.setWidget(self.top_widget)
-        self.top_layout = Qt.QVBoxLayout(self.top_widget)
-        self.top_grid_layout = Qt.QGridLayout()
-        self.top_layout.addLayout(self.top_grid_layout)
-
-        self.settings = Qt.QSettings("GNU Radio", "reader")
-
-        try:
-            if StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
-                self.restoreGeometry(self.settings.value("geometry").toByteArray())
-            else:
-                self.restoreGeometry(self.settings.value("geometry"))
-        except:
-            pass
 
         ##################################################
         # Variables
         ##################################################
-        self.zmq_addr = zmq_addr = "tcp://*:5555"
+        self.zmq_addr = zmq_addr = "tcp://*:5558"
         self.tx_gain = tx_gain = 70
         self.tx_bw = tx_bw = 1e6
-        self.rx_gain = rx_gain = 20
+        self.rx_gain = rx_gain = 30
         self.rx_bw = rx_bw = 1e6
         self.path_to_data = path_to_data = "/home/sakeru/Desktop/fyp/Gen2-UHF-RFID-Reader/gr-rfid/misc/data/"
         self.num_taps = num_taps = [1] * 25
         self.freq = freq = 900e6
         self.decim = decim = 4
         self.dac_rate = dac_rate = 1e6
-        self.ampl = ampl = 0.5
+        self.ampl = ampl = 1
         self.adc_rate = adc_rate = 2e6
 
         ##################################################
@@ -126,27 +84,39 @@ class reader(gr.top_block, Qt.QWidget):
                 decimation=decim,
                 taps=None,
                 fractional_bw=0.4)
+        self.blocks_multiply_const_vxx_0 = blocks.multiply_const_ff(ampl)
         self.blocks_float_to_uchar_0 = blocks.float_to_uchar()
         self.blocks_float_to_complex_0 = blocks.float_to_complex(1)
+        self.blocks_file_sink_6 = blocks.file_sink(gr.sizeof_gr_complex*1, path_to_data+"to_complex", False)
+        self.blocks_file_sink_6.set_unbuffered(False)
+        self.blocks_file_sink_4 = blocks.file_sink(gr.sizeof_float*1, path_to_data+"reader", False)
+        self.blocks_file_sink_4.set_unbuffered(False)
+        self.blocks_file_sink_3 = blocks.file_sink(gr.sizeof_gr_complex*1, path_to_data+"gate", False)
+        self.blocks_file_sink_3.set_unbuffered(True)
+        self.blocks_file_sink_2 = blocks.file_sink(gr.sizeof_gr_complex*1, path_to_data+"matched_filter", False)
+        self.blocks_file_sink_2.set_unbuffered(True)
+        self.blocks_file_sink_0 = blocks.file_sink(gr.sizeof_gr_complex*1, path_to_data+"source", False)
+        self.blocks_file_sink_0.set_unbuffered(False)
 
 
         ##################################################
         # Connections
         ##################################################
+        self.connect((self.blocks_float_to_complex_0, 0), (self.blocks_file_sink_6, 0))
         self.connect((self.blocks_float_to_complex_0, 0), (self.uhd_usrp_sink_2, 0))
         self.connect((self.blocks_float_to_uchar_0, 0), (self.zeromq_pub_sink_0, 0))
+        self.connect((self.blocks_multiply_const_vxx_0, 0), (self.blocks_float_to_complex_0, 0))
+        self.connect((self.rational_resampler_xxx_0, 0), (self.blocks_file_sink_2, 0))
         self.connect((self.rational_resampler_xxx_0, 0), (self.rfid_gate_0, 0))
+        self.connect((self.rfid_gate_0, 0), (self.blocks_file_sink_3, 0))
         self.connect((self.rfid_gate_0, 0), (self.rfid_tag_decoder_0, 0))
-        self.connect((self.rfid_reader_0, 0), (self.blocks_float_to_complex_0, 0))
+        self.connect((self.rfid_reader_0, 0), (self.blocks_file_sink_4, 0))
+        self.connect((self.rfid_reader_0, 0), (self.blocks_multiply_const_vxx_0, 0))
         self.connect((self.rfid_tag_decoder_0, 0), (self.blocks_float_to_uchar_0, 0))
         self.connect((self.rfid_tag_decoder_0, 0), (self.rfid_reader_0, 0))
+        self.connect((self.uhd_usrp_source_1, 0), (self.blocks_file_sink_0, 0))
         self.connect((self.uhd_usrp_source_1, 0), (self.rational_resampler_xxx_0, 0))
 
-
-    def closeEvent(self, event):
-        self.settings = Qt.QSettings("GNU Radio", "reader")
-        self.settings.setValue("geometry", self.saveGeometry())
-        event.accept()
 
     def get_zmq_addr(self):
         return self.zmq_addr
@@ -186,6 +156,11 @@ class reader(gr.top_block, Qt.QWidget):
 
     def set_path_to_data(self, path_to_data):
         self.path_to_data = path_to_data
+        self.blocks_file_sink_0.open(self.path_to_data+"source")
+        self.blocks_file_sink_2.open(self.path_to_data+"matched_filter")
+        self.blocks_file_sink_3.open(self.path_to_data+"gate")
+        self.blocks_file_sink_4.open(self.path_to_data+"reader")
+        self.blocks_file_sink_6.open(self.path_to_data+"to_complex")
 
     def get_num_taps(self):
         return self.num_taps
@@ -233,34 +208,21 @@ class reader(gr.top_block, Qt.QWidget):
 
 
 def main(top_block_cls=reader, options=None):
-
-    if StrictVersion("4.5.0") <= StrictVersion(Qt.qVersion()) < StrictVersion("5.0.0"):
-        style = gr.prefs().get_string('qtgui', 'style', 'raster')
-        Qt.QApplication.setGraphicsSystem(style)
-    qapp = Qt.QApplication(sys.argv)
-
     tb = top_block_cls()
 
-    tb.start()
-
-    tb.show()
-
     def sig_handler(sig=None, frame=None):
-        Qt.QApplication.quit()
+        tb.stop()
+        tb.wait()
+
+        sys.exit(0)
 
     signal.signal(signal.SIGINT, sig_handler)
     signal.signal(signal.SIGTERM, sig_handler)
 
-    timer = Qt.QTimer()
-    timer.start(500)
-    timer.timeout.connect(lambda: None)
+    tb.start()
 
-    def quitting():
-        tb.stop()
-        tb.wait()
+    tb.wait()
 
-    qapp.aboutToQuit.connect(quitting)
-    qapp.exec_()
 
 if __name__ == '__main__':
     main()
