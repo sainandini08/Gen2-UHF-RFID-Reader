@@ -1,6 +1,6 @@
 from os.path import exists
-from PySide2.QtWidgets import *
-from PySide2.QtSql import *
+from PySide6.QtWidgets import *
+from PySide6.QtSql import *
 
 import sys
 

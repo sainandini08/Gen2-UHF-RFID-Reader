@@ -66,6 +66,14 @@ class ZeroMQ_Listener(QObject):
 				# print(self.in_queue)
 
 		# self.finished.emit()
+class ApplicationWindow(QMainWindow):
+    def __init__(self):
+        super().__init__()
+        self.setWindowTitle("Water Tank Detection")
+        self.setGeometry(100, 100, 400, 200)
+        self.label = QLabel("Water tank status: Empty", self)
+        self.label.setGeometry(50, 50, 300, 30)
+        self.show()
 
 class MainWindow(QMainWindow):
 	def __init__(self):
@@ -153,6 +161,17 @@ class MainWindow(QMainWindow):
 
 		# Setup ZMQ listener workers with QThread
 		self.ZMQ_Thread()
+
+		#opnening application interface
+		self.open_application_window_button = QPushButton("Open Application Window", self)
+		self.open_application_window_button.setGeometry(50, 100, 200, 30)  # Keep initial position
+		self.open_application_window_button.setStyleSheet("background-color: blue; color: white; border: none; border-radius: 5px;")
+		# Set background-color to blue, text color to white, and style the button as desired
+		self.open_application_window_button.move(
+		self.frameGeometry().width() - self.open_application_window_button.frameGeometry().width() - 15,
+		self.frameGeometry().height() - self.open_application_window_button.frameGeometry().height() - 15)
+		self.open_application_window_button.clicked.connect(self.show_application_window)
+
 
 		# MOVE WINDOW
 		def moveWindow(event):
@@ -342,6 +361,12 @@ class MainWindow(QMainWindow):
 
 		# self.model.select()
 
+	def show_application_window(self):
+		self.application_window = ApplicationWindow()
+		self.application_window.show()
+
+
+
 	def getSettingsValues(self):
 		self.setting_ip = QSettings('GUI Database', 'IP Address')
 		# If setup for first time, set as localhost, else load from settings
@@ -369,6 +394,9 @@ class MainWindow(QMainWindow):
 			s.close()
 			self.ui.host_ip_label.setText('Host IP Address: ' + IP)
 		return
+
+
+
 
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
