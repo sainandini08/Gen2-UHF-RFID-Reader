@@ -9,77 +9,111 @@
 import sys, socket, zmq, platform, time
 from datetime import datetime
 # from PySide6.QtGui import (QBrush, QColor, QConicalGradient, QCursor, QFont, QFontDatabase, QIcon, QKeySequence, QLinearGradient, QPalette, QPainter, QPixmap, QRadialGradient)
-from PySide6.QtCore import (Qt, QSortFilterProxyModel, QSettings, QThread, Signal, QObject, QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject,  QPoint, QRect, QSize, QTime, QUrl, QEvent)
+from PySide6.QtCore import (Qt, QSortFilterProxyModel, QSettings, QThread, Signal, QObject, QCoreApplication,
+							QPropertyAnimation, QDate, QDateTime, QMetaObject, QPoint, QRect, QSize, QTime, QUrl,
+							QEvent)
 from PySide6.QtWidgets import *
 from PySide6.QtSql import *
+
+import random
+
 from os.path import exists
 from collections import deque
-
 
 # GUI FILE
 from ui_main import Ui_MainWindow
 
 # IMPORT FUNCTIONS
 from ui_functions import *
+from collections import deque
+from PySide6.QtCore import Signal, QObject
+
+class ZMQ_Sender(QObject):
+	def __init__(self):
+		QObject.__init__(self)
+		self.context = zmq.Context()
+		self.socket = self.context.socket(zmq.PUSH)
+		self.socket.bind("tcp://127.0.0.1:5556")
+
+	def send_data(self, epc, rssi):
+		try:
+			self.socket.send_multipart([epc.encode('utf-8'), str(rssi).encode('utf-8')])
+		except Exception as e:
+			print(f"Error in send_data: {e}")
+
+	def close_socket(self):
+		self.socket.close()
+		self.context.term()
+
 
 class ZeroMQ_Listener(QObject):
 	finished = Signal()
 	data = Signal()
-	
-	def __init__(self, queue):
+
+	def __init__(self, queue, zmq_sender):
 		QObject.__init__(self)
-		context = zmq.Context()
-		self.socket = context.socket(zmq.SUB)
-
-		self.setting_ip = QSettings('GUI Database', 'IP Address')
-		if self.setting_ip.value('IP_Address') != None:
-			tcp_str = 'tcp://' + self.setting_ip.value('IP_Address') + ':5556'
-		else:
-			tcp_str = 'tcp://127.0.0.1:5556'
-		print('Connecting to IP Address: ' + tcp_str)
-		self.socket.connect(tcp_str)
-
-		# Subscribe to topic
-		self.socket.setsockopt(zmq.SUBSCRIBE, b'')  # subscribe to topic of all
-		# Flag for running loop
+		self.socket = zmq_sender.socket
 		self.is_running = False
-		# Passing deque into self referenced variable
 		self.in_queue = queue
 
+		def loop(self):
+			while self.is_running:
+				try:
+					event = self.socket.poll(timeout=1000)
+					if event == 0:
+						pass
+					else:
+						EPC, RSSI = self.socket.recv_multipart()
+						EPC = EPC.decode('utf-8')
+						RSSI = float(RSSI.decode('utf-8'))
+						self.in_queue.append((EPC, RSSI))
+						self.data.emit()
+				except Exception as e:
+					print(f"Error in ZeroMQ listener: {e}")
+
+		# self.setting_ip = QSettings('GUI Database', 'IP Address')
+		# if self.setting_ip.value('IP_Address') != None:
+		# 	tcp_str = 'tcp://' + self.setting_ip.value('IP_Address') + ':5556'
+		# else:
+		# 	tcp_str = 'tcp://127.0.0.1:5556'
+		# print('Connecting to IP Address: ' + tcp_str)
+		# self.socket.connect(tcp_str)
+		#
+		# self.socket.setsockopt(zmq.SUBSCRIBE, b'')
+		# self.is_running = False
+		# self.in_queue = queue
 
 	def loop(self):
-		# Check current thread ID
-		# print(str(QThread.currentThread()))
-		# Receive ZMQ data
 		while self.is_running:
-			# Poll socket for event, wait 1 second for timeout.
-			event = self.socket.poll(timeout=1000)
-			if event == 0:
-				pass
-			else:
-				EPC, RSSI = self.socket.recv_multipart()
-				EPC = EPC.decode('utf-8')
-				RSSI = float(RSSI.decode('utf-8'))
-				# print(EPC, RSSI)
-				self.in_queue.append((EPC, RSSI))
-				self.data.emit()
-				# print(self.in_queue)
+			try:
+				event = self.socket.poll(timeout=1000)
+				if event == 0:
+					pass
+				else:
+					EPC, RSSI = self.socket.recv_multipart()
+					EPC = EPC.decode('utf-8')
+					RSSI = float(RSSI.decode('utf-8'))
+					self.in_queue.append((EPC, RSSI))
+					self.data.emit()
+			except Exception as e:
+				print(f"Error in ZeroMQ listener: {e}")
 
-		# self.finished.emit()
-class ApplicationWindow(QMainWindow):
-    def __init__(self):
-        super().__init__()
-        self.setWindowTitle("Water Tank Detection")
-        self.setGeometry(100, 100, 400, 200)
-        self.label = QLabel("Water tank status: Empty", self)
-        self.label.setGeometry(50, 50, 300, 30)
-        self.show()
 
 class MainWindow(QMainWindow):
+
 	def __init__(self):
-		QMainWindow.__init__(self)
-		self.ui = Ui_MainWindow()
-		self.ui.setupUi(self)
+		super(MainWindow, self).__init__()
+		# Initialize queue attribute
+		self.queue = deque()
+		self.ZMQ_Thread()
+		self.simulate_water_status()
+	# def __init__(self):
+	# 	# QMainWindow.__init__(self)
+	# 	super(MainWindow, self).__init__()
+	# 	# self.ui = Ui_MainWindow()
+	# 	#self.setupUi(self)
+	# 	self.ZMQ_Thread()
+	# 	self.simulate_water_status()
 
 		# Connect to SQL database
 		self.db = QSqlDatabase.addDatabase("QSQLITE")
@@ -101,7 +135,7 @@ class MainWindow(QMainWindow):
 
 		# Check host IP Address and set text in host_ip_label.
 		self.get_hostip()
-		
+
 		# Check current thread ID
 		# print(str(QThread.currentThread()))
 
@@ -130,6 +164,8 @@ class MainWindow(QMainWindow):
 		self.model.setHeaderData(12, Qt.Horizontal, "Phase Angle")
 		self.model.setHeaderData(13, Qt.Horizontal, "Doppler Frequency")
 
+		# dummy vals
+		# self.ui.start_stop_btn.clicked.connect(self.simulate_water_status)
 		# Update tableView as QSqlTableModel
 		self.ui.tableView.setModel(self.model)
 		self.ui.tableView.resizeColumnsToContents()
@@ -143,8 +179,8 @@ class MainWindow(QMainWindow):
 		# setFilterKeyColumn default 0, -1 to search all columns
 		self.filter_proxy_model.setFilterKeyColumn(-1)
 		# Start search when text is entered into the QLineEdit search_db
-		#self.ui.search_db.textChanged.connect(self.filter_proxy_model.setFilterRegExp) [not in PySide6]
-		self.ui.search_db.textChanged.connect(lambda text: self.filter_proxy_model.setFilterRegExp(text))
+		# self.ui.search_db.textChanged.connect(self.filter_proxy_model.setFilterRegExp) [not in PySide6]
+		self.ui.search_db.textChanged.connect(lambda text: self.filter_proxy_model.setFilterRegularExpression(text))
 		self.ui.tableView.setModel(self.filter_proxy_model)
 
 		# Start / Stop program
@@ -152,26 +188,16 @@ class MainWindow(QMainWindow):
 
 		# Trigger db row removal
 		self.ui.remove_row.clicked.connect(self.DeleteRow)
-		
+
 		# Retrieve Settings from QSettings
 		self.getSettingsValues()
-		
+
 		# Trigger IP Address change after edit
 		self.ui.lineEdit_ip.editingFinished.connect(self.Edit_IP)
 
+		self.simulate_water_status()
 		# Setup ZMQ listener workers with QThread
 		self.ZMQ_Thread()
-
-		#opnening application interface
-		self.open_application_window_button = QPushButton("Open Application Window", self)
-		self.open_application_window_button.setGeometry(50, 100, 200, 30)  # Keep initial position
-		self.open_application_window_button.setStyleSheet("background-color: blue; color: white; border: none; border-radius: 5px;")
-		# Set background-color to blue, text color to white, and style the button as desired
-		self.open_application_window_button.move(
-		self.frameGeometry().width() - self.open_application_window_button.frameGeometry().width() - 15,
-		self.frameGeometry().height() - self.open_application_window_button.frameGeometry().height() - 15)
-		self.open_application_window_button.clicked.connect(self.show_application_window)
-
 
 		# MOVE WINDOW
 		def moveWindow(event):
@@ -190,7 +216,6 @@ class MainWindow(QMainWindow):
 
 		## ==> SET UI DEFINITIONS
 		UIFunctions.uiDefinitions(self)
-
 
 		## SHOW ==> MAIN WINDOW
 		########################################################################
@@ -224,36 +249,60 @@ class MainWindow(QMainWindow):
 			self.ui.start_stop_btn.setStyleSheet("background-color: rgb(0, 255, 0)")
 			self.ui.start_stop_btn.setText("Start")
 			self.zeromq_listener.is_running = False
-			# self.thread.quit()
-			# self.thread.wait()
-			# if self.thread.isFinished():
-			# 	print("Thread Status: Finished")
+
+	# self.thread.quit()
+	# self.thread.wait()
+	# if self.thread.isFinished():
+	# 	print("Thread Status: Finished")
 
 	def ZMQ_Thread(self):
 		# Setup ZMQ listener workers with QThread
 		self.thread = QThread()
-		self.zeromq_listener = ZeroMQ_Listener(self.queue)
+		self.zmq_sender = ZMQ_Sender()  # Instantiate ZMQ_Sender
+		# Pass ZMQ_Sender object to ZeroMQ_Listener
+		self.zeromq_listener = ZeroMQ_Listener(self.queue, self.zmq_sender)
+
 		self.zeromq_listener.moveToThread(self.thread)
-		
+
 		# Connect signals and slots
 		self.thread.started.connect(self.zeromq_listener.loop)
 		# Connect data from thread to function in main
-		self.zeromq_listener.data.connect(self.ZMQ_simulation) 
+		self.zeromq_listener.data.connect(self.ZMQ_simulation)
 		# Trigger loop whenever start / stop button is pressed
 		self.ui.start_stop_btn.clicked.connect(self.zeromq_listener.loop)
-
-		# Do not destroy thread, can be reused without setting up everything again
-		# self.zeromq_listener.finished.connect(self.thread.quit)
-		# self.zeromq_listener.finished.connect(self.zeromq_listener.deleteLater)
-		# self.thread.finished.connect(self.thread.deleteLater)
 
 		# Start thread
 		self.thread.start()
 
+	# def ZMQ_Thread(self):
+	# 	# Setup ZMQ listener workers with QThread
+	# 	self.thread = QThread()
+	# 	self.zmq_sender = ZMQ_Sender()  # Instantiate ZMQ_Sender
+	# 	self.zeromq_listener = ZeroMQ_Listener(self.queue, self.zmq_sender)  # Pass ZMQ_Sender as an argument
+	#
+	# 	self.zeromq_listener.moveToThread(self.thread)
+	#
+	# 	# Connect signals and slots
+	# 	self.thread.started.connect(self.zeromq_listener.loop)
+	# 	# Connect data from thread to function in main
+	# 	self.zeromq_listener.data.connect(self.ZMQ_simulation)
+	# 	# Trigger loop whenever start / stop button is pressed
+	# 	self.ui.start_stop_btn.clicked.connect(self.zeromq_listener.loop)
+	#
+	# 	# Do not destroy thread, can be reused without setting up everything again
+	# 	# self.zeromq_listener.finished.connect(self.thread.quit)
+	# 	# self.zeromq_listener.finished.connect(self.zeromq_listener.deleteLater)
+	# 	# self.thread.finished.connect(self.thread.deleteLater)
+	#
+	# 	# Start thread
+	# 	self.thread.start()
+
 	def ZMQ_simulation(self):
 		if self.queue:
 			EPC, RSSI = self.queue.popleft()
-			# print(self.queue)
+			print(f"Sending data to Kivy: EPC={EPC}, RSSI={RSSI}")
+			# Your existing code for database operations
+
 			# Append new data to table
 			query = QSqlQuery()
 
@@ -291,7 +340,8 @@ class MainWindow(QMainWindow):
 						""")
 
 			# Substitute named bindings in prepared SQL query, prepare because cannot execute directly with string literal.
-			First_Seen = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')[:-3] # Drop last 3 digits of microseconds to match SQL precision of 3 digit milliseconds.
+			First_Seen = datetime.today().strftime('%Y-%m-%d %H:%M:%S.%f')[
+						 :-3]  # Drop last 3 digits of microseconds to match SQL precision of 3 digit milliseconds.
 			query.bindValue(":EPC", EPC)
 			query.bindValue(":Category", 'Class 1')
 			query.bindValue(":Last_Read_From", self.setting_ip.value('IP_Address'))
@@ -312,18 +362,18 @@ class MainWindow(QMainWindow):
 			query.exec_()
 			self.model.select()
 
-
 	def DeleteRow(self):
 		self.model.removeRow(self.ui.tableView.currentIndex().row())
 		self.model.select()
-		# self.model.submitAll()
+
+	# self.model.submitAll()
 
 	def Edit_IP(self):
 		error = 0
 
 		# Set to localhost 127.0.0.1 if empty, to prevent app from not starting up if no previous IP address entered in QSettings.
 		if self.ui.lineEdit_ip.text() == '':
-			self.setting_ip.setValue('IP_address', '127.0.0.1')
+			self.setting_ip.setValue('IP_Address', '127.0.0.1')
 		else:
 			# check for valid IPv4 Address, check 4 sub-fields, int range 0 to 255 (8 bits).
 			ip_split = self.ui.lineEdit_ip.text().split('.')
@@ -359,13 +409,7 @@ class MainWindow(QMainWindow):
 			print("Thread Status: Finished")
 		self.ZMQ_Thread()
 
-		# self.model.select()
-
-	def show_application_window(self):
-		self.application_window = ApplicationWindow()
-		self.application_window.show()
-
-
+	# self.model.select()
 
 	def getSettingsValues(self):
 		self.setting_ip = QSettings('GUI Database', 'IP Address')
@@ -377,9 +421,34 @@ class MainWindow(QMainWindow):
 		else:
 			self.ui.lineEdit_ip.setText(self.setting_ip.value('IP_Address'))
 
-		# self.setting_window = QSettings('GUI Database', 'Window Size')
+	# self.setting_window = QSettings('GUI Database', 'Window Size')
 
-	# Works on Linux, Windows, and OSX. Does NOT need routable net access or any connection at all. 
+	# dummy vals
+	def simulate_water_status(self):
+		fake_epc = f"{random.randint(100000000000, 999999999999)}"
+		fake_rssi = random.uniform(-60.0, -30.0)
+		print(f"Simulating water status: EPC={fake_epc}, RSSI={fake_rssi}")
+
+		self.zeromq_listener.ZMQ_simulation(fake_epc, fake_rssi)
+		# self.ui.send_values_to_kivy(fake_epc, fake_rssi)
+		# Add code to send data to Kivy
+		# self.send_values_to_kivy(fake_epc, fake_rssi)
+
+	# def send_values_to_kivy(self, fake_epc, fake_rssi):
+	# 	try:
+	# 		context = zmq.Context()
+	# 		socket = context.socket(zmq.PUSH)
+	# 		socket.connect("tcp://127.0.0.1:5556")
+	# 		print("Connected to Kivy")
+	# 		socket.send_multipart([fake_epc.encode('utf-8'), str(fake_rssi).encode('utf-8')])
+	# 		print("Sent data to Kivy")
+	# 	except Exception as e:
+	# 		print(f"Error in send_values_to_kivy: {e}")
+	# 	finally:
+	# 		socket.close()
+	# 		context.term()
+
+	# Works on Linux, Windows, and OSX. Does NOT need routable net access or any connection at all.
 	# Works even if all interfaces are unplugged from the network. No external dependencies.
 	def get_hostip(self):
 		s = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
@@ -395,10 +464,8 @@ class MainWindow(QMainWindow):
 			self.ui.host_ip_label.setText('Host IP Address: ' + IP)
 		return
 
-
-
-
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
 	window = MainWindow()
+	window.show()
 	sys.exit(app.exec())

@@ -80,6 +80,7 @@ class Ui_MainWindow(object):
         self.frame_btns.setFrameShadow(QFrame.Raised)
         self.horizontalLayout_3 = QHBoxLayout(self.frame_btns)
         self.horizontalLayout_3.setObjectName(u"horizontalLayout_3")
+
         self.btn_minimize = QPushButton(self.frame_btns)
         self.btn_minimize.setObjectName(u"btn_minimize")
         self.btn_minimize.setMinimumSize(QSize(16, 16))
@@ -151,6 +152,7 @@ class Ui_MainWindow(object):
         self.frame_content_home.setFrameShadow(QFrame.Raised)
         self.verticalLayout_9 = QVBoxLayout(self.frame_content_home)
         self.verticalLayout_9.setObjectName(u"verticalLayout_9")
+
         self.start_stop_btn = QPushButton(self.frame_content_home)
         self.start_stop_btn.setObjectName(u"start_stop_btn")
         font2 = QFont()

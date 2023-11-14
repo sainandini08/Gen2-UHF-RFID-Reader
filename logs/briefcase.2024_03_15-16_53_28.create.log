@@ -1,0 +1,144 @@
+Date/Time:       2024-03-15 16:53:28 
+Command line:    C:\Users\saina\PycharmProjects\Gen2-UHF-RFID-Reader\venv\Scripts\briefcase create
+
+OS Release:      Windows 10
+OS Version:      10.0.22631
+Architecture:    AMD64
+Platform:        Windows-10-10.0.22631-SP0
+
+Python exe:      c:\users\saina\pycharmprojects\gen2-uhf-rfid-reader\venv\scripts\python.exe
+Python version:  3.11.8 (tags/v3.11.8:db85d51, Feb  6 2024, 22:03:32) [MSC v.1937 64 bit (AMD64)]
+Virtual env:     True
+Conda env:       False
+
+Briefcase:       0.3.17
+Target platform: windows
+Target format:   app
+
+Environment Variables:
+	ALLUSERSPROFILE=C:\ProgramData
+	APPDATA=C:\Users\saina\AppData\Roaming
+	COMMONPROGRAMFILES=C:\Program Files\Common Files
+	COMMONPROGRAMFILES(X86)=C:\Program Files (x86)\Common Files
+	COMMONPROGRAMW6432=C:\Program Files\Common Files
+	COMPUTERNAME=LAPTOP-E0ID4ISB
+	COMSPEC=C:\WINDOWS\system32\cmd.exe
+	DRIVERDATA=C:\Windows\System32\Drivers\DriverData
+	EFC_4660=1
+	FIG_JETBRAINS_SHELL_INTEGRATION=1
+	HOMEDRIVE=C:
+	HOMEPATH=\Users\saina
+	IDEA_INITIAL_DIRECTORY=C:\Program Files\JetBrains\PyCharm Community Edition 2023.2.1\bin
+	LOCALAPPDATA=C:\Users\saina\AppData\Local
+	LOGONSERVER=\\LAPTOP-E0ID4ISB
+	MOSQUITTO_DIR=C:\Program Files\mosquitto
+	NUMBER_OF_PROCESSORS=4
+	ONEDRIVE=C:\Users\saina\OneDrive - National University of Singapore
+	ONEDRIVECOMMERCIAL=C:\Users\saina\OneDrive - National University of Singapore
+	ONEDRIVECONSUMER=C:\Users\saina\OneDrive
+	OS=Windows_NT
+	PATH=C:\Users\saina\PycharmProjects\Gen2-UHF-RFID-Reader\venv/Scripts;C:\WINDOWS\system32;C:\WINDOWS;C:\WINDOWS\System32\Wbem;C:\WINDOWS\System32\WindowsPowerShell\v1.0\;C:\WINDOWS\System32\OpenSSH\;C:\Program Files (x86)\Pulse Secure\VC142.CRT\X64\;C:\Program Files (x86)\Pulse Secure\VC142.CRT\X86\;C:\Program Files (x86)\Common Files\Pulse Secure\TNC Client Plugin\;c:\WINDOWS\System32\WBem;C:\Program Files\Git\cmd;C:\Users\saina\AppData\Local\Programs\Python\Python310;C:\Users\saina\Downloads\sqlite-dll-win-x64-3450100\sqlite3.dll;C:\Users\saina\AppData\Local\Microsoft\WindowsApps;C:\Users\saina\AppData\Local\Programs\Microsoft VS Code\bin;C:\Users\saina\AppData\Local\GitHubDesktop\bin
+	PATHEXT=.COM;.EXE;.BAT;.CMD;.VBS;.VBE;.JS;.JSE;.WSF;.WSH;.MSC;.CPL
+	PROCESSOR_ARCHITECTURE=AMD64
+	PROCESSOR_IDENTIFIER=Intel64 Family 6 Model 156 Stepping 0, GenuineIntel
+	PROCESSOR_LEVEL=6
+	PROCESSOR_REVISION=9c00
+	PROGRAMDATA=C:\ProgramData
+	PROGRAMFILES=C:\Program Files
+	PROGRAMFILES(X86)=C:\Program Files (x86)
+	PROGRAMW6432=C:\Program Files
+	PSEXECUTIONPOLICYPREFERENCE=RemoteSigned
+	PSMODULEPATH=C:\Users\saina\Documents\WindowsPowerShell\Modules;C:\Program Files\WindowsPowerShell\Modules;C:\WINDOWS\system32\WindowsPowerShell\v1.0\Modules
+	PUBLIC=C:\Users\Public
+	PYTHONUSERBASE=C:\Users\saina\AppData\Local\Packages\PythonSoftwareFoundation.Python.3.11_qbz5n2kfra8p0\LocalCache\local-packages
+	SESSIONNAME=Console
+	SYSTEMDRIVE=C:
+	SYSTEMROOT=C:\WINDOWS
+	TEMP=C:\Users\saina\AppData\Local\Temp
+	TERMINAL_EMULATOR=JetBrains-JediTerm
+	TERM_SESSION_ID=1f1b9d64-afbd-4cde-8e70-1bcdb2fe3f97
+	TMP=C:\Users\saina\AppData\Local\Temp
+	USERDOMAIN=LAPTOP-E0ID4ISB
+	USERDOMAIN_ROAMINGPROFILE=LAPTOP-E0ID4ISB
+	USERNAME=saina
+	USERPROFILE=C:\Users\saina
+	VIRTUAL_ENV=C:\Users\saina\PycharmProjects\Gen2-UHF-RFID-Reader\venv
+	WINDIR=C:\WINDOWS
+	ZES_ENABLE_SYSMAN=1
+
+Briefcase Log:
+
+Main thread traceback:
+╭─────────────────────────────────────────────────────────────────────── Traceback (most recent call last) ────────────────────────────────────────────────────────────────────────╮
+│ c:\users\saina\pycharmprojects\gen2-uhf-rfid-reader\venv\Lib\site-packages\briefcase\__main__.py:25 in main                                                                      │
+│                                                                                                                                                                                  │
+│   22 │   │   Command, extra_cmdline = parse_cmdline(sys.argv[1:])                                                                                                                │
+│   23 │   │   command = Command(logger=logger, console=console)                                                                                                                   │
+│   24 │   │   options, overrides = command.parse_options(extra=extra_cmdline)                                                                                                     │
+│ ❱ 25 │   │   command.parse_config(                                                                                                                                               │
+│   26 │   │   │   Path.cwd() / "pyproject.toml",                                                                                                                                  │
+│   27 │   │   │   overrides=overrides,                                                                                                                                            │
+│   28 │   │   )                                                                                                                                                                   │
+│                                                                                                                                                                                  │
+│ ╭──────────────────────────────────────────────── locals ────────────────────────────────────────────────╮                                                                       │
+│ │       command = <briefcase.platforms.windows.app.WindowsAppCreateCommand object at 0x000002975D71ABD0> │                                                                       │
+│ │       Command = <class 'briefcase.platforms.windows.app.WindowsAppCreateCommand'>                      │                                                                       │
+│ │       console = <briefcase.console.Console object at 0x000002975D6B8590>                               │                                                                       │
+│ │ extra_cmdline = []                                                                                     │                                                                       │
+│ │        logger = <briefcase.console.Log object at 0x000002975D6B85D0>                                   │                                                                       │
+│ │       options = {}                                                                                     │                                                                       │
+│ │     overrides = {}                                                                                     │                                                                       │
+│ │       printer = <briefcase.console.Printer object at 0x000002975BC753D0>                               │                                                                       │
+│ │        result = 0                                                                                      │                                                                       │
+│ ╰────────────────────────────────────────────────────────────────────────────────────────────────────────╯                                                                       │
+│                                                                                                                                                                                  │
+│ c:\users\saina\pycharmprojects\gen2-uhf-rfid-reader\venv\Lib\site-packages\briefcase\commands\base.py:831 in parse_config                                                        │
+│                                                                                                                                                                                  │
+│   828 │   │   │   │   # Parse the content of the pyproject.toml file, extracting                                                                                                 │
+│   829 │   │   │   │   # any platform and output format configuration for each app,                                                                                               │
+│   830 │   │   │   │   # creating a single set of configuration options.                                                                                                          │
+│ ❱ 831 │   │   │   │   global_config, app_configs = parse_config(                                                                                                                 │
+│   832 │   │   │   │   │   config_file,                                                                                                                                           │
+│   833 │   │   │   │   │   platform=self.platform,                                                                                                                                │
+│   834 │   │   │   │   │   output_format=self.output_format,                                                                                                                      │
+│                                                                                                                                                                                  │
+│ ╭───────────────────────────────────────────────────── locals ──────────────────────────────────────────────────────╮                                                            │
+│ │ config_file = <_io.BufferedReader name='C:\\Users\\saina\\PycharmProjects\\Gen2-UHF-RFID-Reader\\pyproject.toml'> │                                                            │
+│ │    filename = WindowsPath('C:/Users/saina/PycharmProjects/Gen2-UHF-RFID-Reader/pyproject.toml')                   │                                                            │
+│ │   overrides = {}                                                                                                  │                                                            │
+│ │        self = <briefcase.platforms.windows.app.WindowsAppCreateCommand object at 0x000002975D71ABD0>              │                                                            │
+│ ╰───────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯                                                            │
+│                                                                                                                                                                                  │
+│ c:\users\saina\pycharmprojects\gen2-uhf-rfid-reader\venv\Lib\site-packages\briefcase\config.py:492 in parse_config                                                               │
+│                                                                                                                                                                                  │
+│   489 │   │   platform_data = None                                                                                                                                               │
+│   490 │   │   for p in all_platforms:                                                                                                                                            │
+│   491 │   │   │   try:                                                                                                                                                           │
+│ ❱ 492 │   │   │   │   platform_block = app_data.pop(p)                                                                                                                           │
+│   493 │   │   │   │                                                                                                                                                              │
+│   494 │   │   │   │   if p == platform:                                                                                                                                          │
+│   495 │   │   │   │   │   # If the platform matches the requested format, preserve                                                                                               │
+│                                                                                                                                                                                  │
+│ ╭────────────────────────────────────────────────────── locals ───────────────────────────────────────────────────────╮                                                          │
+│ │      all_apps = {                                                                                                   │                                                          │
+│ │                 │   'name': 'WaterStatusGUI',                                                                       │                                                          │
+│ │                 │   'version': '0.1.0',                                                                             │                                                          │
+│ │                 │   'description': 'Dsiplays Water Status',                                                         │                                                          │
+│ │                 │   'authors': ['Nan <e0775697@u.nus.edu>'],                                                        │                                                          │
+│ │                 │   'android': {'package': 'com.example.GEN2UHFRFIDReader'}                                         │                                                          │
+│ │                 }                                                                                                   │                                                          │
+│ │   all_formats = ['VisualStudio', 'app']                                                                             │                                                          │
+│ │ all_platforms = ['android', 'iOS', 'linux', 'macOS', 'web', 'windows']                                              │                                                          │
+│ │   app_configs = {}                                                                                                  │                                                          │
+│ │      app_data = 'WaterStatusGUI'                                                                                    │                                                          │
+│ │      app_name = 'name'                                                                                              │                                                          │
+│ │   config_file = <_io.BufferedReader name='C:\\Users\\saina\\PycharmProjects\\Gen2-UHF-RFID-Reader\\pyproject.toml'> │                                                          │
+│ │ global_config = {}                                                                                                  │                                                          │
+│ │ output_format = 'app'                                                                                               │                                                          │
+│ │             p = 'android'                                                                                           │                                                          │
+│ │      platform = 'windows'                                                                                           │                                                          │
+│ │ platform_data = None                                                                                                │                                                          │
+│ │     pyproject = {'tool': {'briefcase': {}}}                                                                         │                                                          │
+│ ╰─────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯                                                          │
+╰──────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────────╯
+AttributeError: 'str' object has no attribute 'pop'

@@ -12,60 +12,57 @@ from datetime import datetime
 from PySide6.QtCore import (Qt, QSortFilterProxyModel, QSettings, QThread, Signal, QObject, QCoreApplication, QPropertyAnimation, QDate, QDateTime, QMetaObject,  QPoint, QRect, QSize, QTime, QUrl, QEvent)
 from PySide6.QtWidgets import *
 from PySide6.QtSql import *
+#from PyQt6 import QtWidgets
+
+
+import random
+
 from os.path import exists
 from collections import deque
 
 
 # GUI FILE
 from ui_main import Ui_MainWindow
+#from watertrackerapp import Ui_MainWindow as WaterTrackerMainWindow
 
 # IMPORT FUNCTIONS
 from ui_functions import *
 
 class ZeroMQ_Listener(QObject):
-	finished = Signal()
-	data = Signal()
-	
-	def __init__(self, queue):
-		QObject.__init__(self)
-		context = zmq.Context()
-		self.socket = context.socket(zmq.SUB)
+    finished = Signal()
+    data = Signal()
 
-		self.setting_ip = QSettings('GUI Database', 'IP Address')
-		if self.setting_ip.value('IP_Address') != None:
-			tcp_str = 'tcp://' + self.setting_ip.value('IP_Address') + ':5556'
-		else:
-			tcp_str = 'tcp://127.0.0.1:5556'
-		print('Connecting to IP Address: ' + tcp_str)
-		self.socket.connect(tcp_str)
+    def __init__(self, queue):
+        QObject.__init__(self)
+        context = zmq.Context()
+        self.socket = context.socket(zmq.SUB)
 
-		# Subscribe to topic
-		self.socket.setsockopt(zmq.SUBSCRIBE, b'')  # subscribe to topic of all
-		# Flag for running loop
-		self.is_running = False
-		# Passing deque into self referenced variable
-		self.in_queue = queue
+        self.setting_ip = QSettings('GUI Database', 'IP Address')
+        if self.setting_ip.value('IP_Address') != None:
+            tcp_str = 'tcp://' + self.setting_ip.value('IP_Address') + ':5556'
+        else:
+            tcp_str = 'tcp://127.0.0.1:5556'
+        print('Connecting to IP Address: ' + tcp_str)
+        self.socket.connect(tcp_str)
 
+        self.socket.setsockopt(zmq.SUBSCRIBE, b'')
+        self.is_running = False
+        self.in_queue = queue
 
-	def loop(self):
-		# Check current thread ID
-		# print(str(QThread.currentThread()))
-		# Receive ZMQ data
-		while self.is_running:
-			# Poll socket for event, wait 1 second for timeout.
-			event = self.socket.poll(timeout=1000)
-			if event == 0:
-				pass
-			else:
-				EPC, RSSI = self.socket.recv_multipart()
-				EPC = EPC.decode('utf-8')
-				RSSI = float(RSSI.decode('utf-8'))
-				# print(EPC, RSSI)
-				self.in_queue.append((EPC, RSSI))
-				self.data.emit()
-				# print(self.in_queue)
-
-		# self.finished.emit()
+    def loop(self):
+        while self.is_running:
+            try:
+                event = self.socket.poll(timeout=1000)
+                if event == 0:
+                    pass
+                else:
+                    EPC, RSSI = self.socket.recv_multipart()
+                    EPC = EPC.decode('utf-8')
+                    RSSI = float(RSSI.decode('utf-8'))
+                    self.in_queue.append((EPC, RSSI))
+                    self.data.emit()
+            except Exception as e:
+                print(f"Error in ZeroMQ listener: {e}")
 
 class MainWindow(QMainWindow):
 	def __init__(self):
@@ -122,6 +119,8 @@ class MainWindow(QMainWindow):
 		self.model.setHeaderData(12, Qt.Horizontal, "Phase Angle")
 		self.model.setHeaderData(13, Qt.Horizontal, "Doppler Frequency")
 
+		#dummy vals
+		self.ui.start_stop_btn.clicked.connect(self.simulate_water_status)
 		# Update tableView as QSqlTableModel
 		self.ui.tableView.setModel(self.model)
 		self.ui.tableView.resizeColumnsToContents()
@@ -136,7 +135,7 @@ class MainWindow(QMainWindow):
 		self.filter_proxy_model.setFilterKeyColumn(-1)
 		# Start search when text is entered into the QLineEdit search_db
 		#self.ui.search_db.textChanged.connect(self.filter_proxy_model.setFilterRegExp) [not in PySide6]
-		self.ui.search_db.textChanged.connect(lambda text: self.filter_proxy_model.setFilterRegExp(text))
+		self.ui.search_db.textChanged.connect(lambda text: self.filter_proxy_model.setFilterRegularExpression(text))
 		self.ui.tableView.setModel(self.filter_proxy_model)
 
 		# Start / Stop program
@@ -234,7 +233,11 @@ class MainWindow(QMainWindow):
 	def ZMQ_simulation(self):
 		if self.queue:
 			EPC, RSSI = self.queue.popleft()
-			# print(self.queue)
+			print(f"Sending data to Kivy: EPC={EPC}, RSSI={RSSI}")
+			# Your existing code for database operations
+
+			self.ui.epc_received.emit(EPC)
+
 			# Append new data to table
 			query = QSqlQuery()
 
@@ -304,7 +307,7 @@ class MainWindow(QMainWindow):
 
 		# Set to localhost 127.0.0.1 if empty, to prevent app from not starting up if no previous IP address entered in QSettings.
 		if self.ui.lineEdit_ip.text() == '':
-			self.setting_ip.setValue('IP_address', '127.0.0.1')
+			self.setting_ip.setValue('IP_Address', '127.0.0.1')
 		else:
 			# check for valid IPv4 Address, check 4 sub-fields, int range 0 to 255 (8 bits).
 			ip_split = self.ui.lineEdit_ip.text().split('.')
@@ -354,6 +357,30 @@ class MainWindow(QMainWindow):
 
 		# self.setting_window = QSettings('GUI Database', 'Window Size')
 
+	#dummy vals
+	def simulate_water_status(self):
+		fake_epc = f"{random.randint(100000000000, 999999999999)}"
+		fake_rssi = random.uniform(-60.0, -30.0)
+		print(f"Simulating water status: EPC={fake_epc}, RSSI={fake_rssi}")
+
+		# Add code to send data to Kivy
+		# self.send_values_to_kivy(fake_epc, fake_rssi)
+
+	# def send_values_to_kivy(self, fake_epc, fake_rssi):
+		try:
+			self.context = zmq.Context()
+			self.socket = self.context.socket(zmq.PUB)
+			self.socket.bind("tcp://*:5556")
+			print("Connected to Kivy")
+			self.socket.send_multipart([bytes(fake_epc, 'utf-8'), bytes(str(fake_rssi), 'utf-8')])
+			print("Sent data to Kivy")
+		except Exception as e:
+			print(f"Error in sending data to Kivy: {e}")
+#		finally:
+#			socket.close()
+			#context.term()
+
+
 	# Works on Linux, Windows, and OSX. Does NOT need routable net access or any connection at all. 
 	# Works even if all interfaces are unplugged from the network. No external dependencies.
 	def get_hostip(self):
@@ -373,4 +400,9 @@ class MainWindow(QMainWindow):
 if __name__ == "__main__":
 	app = QApplication(sys.argv)
 	window = MainWindow()
+	window.show()
+
+	#water_tracker_main_window = WaterTrackerMainWindow()
+	#water_tracker_main_window.show()
+
 	sys.exit(app.exec())

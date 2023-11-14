@@ -1,0 +1,16 @@
+[build-system]
+requires = ["setuptools", "wheel", "pyqt6"]
+build-backend = "setuptools.build_meta"
+
+[tool.briefcase.app]
+name = "WaterStatusGUI"
+version = "1.0.0"
+description = "Displays Water Status"
+authors = ["Nan <e0775697@u.nus.edu>"]
+sources = ["C:/Users/saina/PycharmProjects/Gen2-UHF-RFID-Reader/GUI/watertrtacker_main.py"]
+
+[tool.briefcase.app.android]
+package = "com.example.WaterStatusGUI"
+
+[project.optional-dependencies]
+gui = ["PyQt6"]
